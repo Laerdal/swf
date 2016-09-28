@@ -47,7 +47,7 @@ class MovieClip extends flash.display.MovieClip {
 	
 	@:noCompletion private var __frameTime:Int;
 	@:noCompletion private var __lastUpdate:Int;
-	@:noCompletion private var __objects:Map<Int, DisplayObject>;
+	@:noCompletion private var __objects:Map<Int, {object : DisplayObject, depth : Int}>;
 	@:noCompletion private var __playing:Bool;
 	@:noCompletion private var __swf:SWFLite;
 	@:noCompletion private var __symbol:SpriteSymbol;
@@ -636,6 +636,7 @@ class MovieClip extends flash.display.MovieClip {
 	@:noCompletion private function __renderFrame (index:Int):Void {
 		
 		var previousIndex = __lastUpdate - 1;
+		var objectsAdded = false;
 		
 		if (previousIndex > index) {
 			
@@ -660,7 +661,7 @@ class MovieClip extends flash.display.MovieClip {
 				
 				if (!exists) {
 					
-					displayObject = __objects.get (id);
+					displayObject = __objects.get (id).object;
 					
 					if (displayObject.parent == this) {
 						
@@ -692,15 +693,16 @@ class MovieClip extends flash.display.MovieClip {
 				if (frameObject.type != FrameObjectType.DESTROY) {
 					
 					if (frameObject.id == 0 && frameObject.symbol != __zeroSymbol) {
-						
-						displayObject = __objects.get (0);
-						
-						if (displayObject != null && displayObject.parent == this) {
-							
-							removeChild (displayObject);
-							
+						var pair = __objects.get (0);
+						if (pair != null) {
+							displayObject = pair.object;
+							if (displayObject != null && displayObject.parent == this) {
+								
+								removeChild (displayObject);
+								
+							}
 						}
-						
+
 						__objects.remove (0);
 						displayObject = null;
 						__zeroSymbol = frameObject.symbol;
@@ -713,23 +715,15 @@ class MovieClip extends flash.display.MovieClip {
 						
 						if (displayObject != null) {
 							
-							if (frameObject.depth >= numChildren) {
-								
-								addChild (displayObject);
-								
-							} else {
-								
-								addChildAt (displayObject, frameObject.depth);
-								
-							}
+							objectsAdded = true;
 							
-							__objects.set (frameObject.id, displayObject);
+							__objects.set (frameObject.id, {object:displayObject, depth:frameObject.depth});
 							
 						}
 						
 					} else {
 						
-						displayObject = __objects.get (frameObject.id);
+						displayObject = __objects.get (frameObject.id).object;
 						
 					}
 					
@@ -769,7 +763,7 @@ class MovieClip extends flash.display.MovieClip {
 					
 					if (__objects.exists (frameObject.id)) {
 						
-						displayObject = __objects.get (frameObject.id);
+						displayObject = __objects.get (frameObject.id).object;
 						
 						if (displayObject != null && displayObject.parent == this) {
 							
@@ -785,6 +779,18 @@ class MovieClip extends flash.display.MovieClip {
 				
 			}
 			
+		}
+
+		if (objectsAdded) {
+			var layers : Array<{object : DisplayObject, depth : Int}> = [];
+			for (layer in __objects) {
+				layers.push(layer);
+			}
+			layers.sort(function(left, right){ return left.depth - right.depth; });
+			for (i in 0...layers.length) {
+				var layer = layers[i];
+				addChildAt(layer.object, i);
+			}
 		}
 		
 	}
