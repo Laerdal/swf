@@ -45,6 +45,9 @@ import lime.Assets in LimeAssets;
 class MovieClip extends flash.display.MovieClip {
 	
 	
+	@:noCompletion static private var __noColorTranform = new openfl.geom.ColorTransform();
+	
+	
 	@:noCompletion private var __frameTime:Int;
 	@:noCompletion private var __lastUpdate:Int;
 	@:noCompletion private var __objects:Map<Int, {object : DisplayObject, depth : Int}>;
@@ -579,11 +582,7 @@ class MovieClip extends flash.display.MovieClip {
 	
 	@:noCompletion private function __placeObject (displayObject:DisplayObject, frameObject:FrameObject):Void {
 		
-		if (frameObject.name != null) {
-			
-			displayObject.name = frameObject.name;
-			
-		}
+		displayObject.name = (frameObject.name != null)? frameObject.name : "";
 		
 		if (frameObject.matrix != null) {
 			
@@ -602,15 +601,11 @@ class MovieClip extends flash.display.MovieClip {
 			
 		}
 		
-		if (frameObject.colorTransform != null) {
+		displayObject.transform.colorTransform = (frameObject.colorTransform != null) ? frameObject.colorTransform : __noColorTranform;
 			
-			displayObject.transform.colorTransform = frameObject.colorTransform;
-			
-		}
+		var filters:Array<BitmapFilter> = [];
 		
 		if (frameObject.filters != null) {
-			
-			var filters:Array<BitmapFilter> = [];
 			
 			for (filter in frameObject.filters) {
 				
@@ -636,9 +631,9 @@ class MovieClip extends flash.display.MovieClip {
 				
 			}
 			
-			displayObject.filters = filters;
-			
 		}
+		
+		displayObject.filters = filters;
 		
 		Reflect.setField (this, displayObject.name, displayObject);
 		
