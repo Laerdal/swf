@@ -50,7 +50,7 @@ class MovieClip extends flash.display.MovieClip {
 	
 	@:noCompletion private var __frameTime:Int;
 	@:noCompletion private var __lastUpdate:Int;
-	@:noCompletion private var __objects:Map<Int, {object : DisplayObject, depth : Int}>;
+	@:noCompletion private var __objects:Map<Int, {object : DisplayObject, depth : Int, onStage : Bool}>;
 	@:noCompletion private var __playing:Bool;
 	@:noCompletion private var __swf:SWFLite;
 	@:noCompletion private var __symbol:SpriteSymbol;
@@ -668,7 +668,8 @@ class MovieClip extends flash.display.MovieClip {
 				
 				if (!exists) {
 					
-					displayObject = __objects.get (id).object;
+					var tuple = __objects.get (id);
+					displayObject = tuple.object;
 					
 					if (displayObject.parent == this) {
 						
@@ -676,7 +677,7 @@ class MovieClip extends flash.display.MovieClip {
 						
 					}
 					
-					__objects.remove (id);
+					tuple.onStage = false;
 					
 				}
 				
@@ -700,17 +701,17 @@ class MovieClip extends flash.display.MovieClip {
 				if (frameObject.type != FrameObjectType.DESTROY) {
 					
 					if (frameObject.id == 0 && frameObject.symbol != __zeroSymbol) {
-						var pair = __objects.get (0);
-						if (pair != null) {
-							displayObject = pair.object;
+						var tuple = __objects.get (0);
+						if (tuple != null) {
+							displayObject = tuple.object;
 							if (displayObject != null && displayObject.parent == this) {
 								
 								removeChild (displayObject);
 								
 							}
+							tuple.onStage = false;
 						}
 
-						__objects.remove (0);
 						displayObject = null;
 						__zeroSymbol = frameObject.symbol;
 						
@@ -724,13 +725,22 @@ class MovieClip extends flash.display.MovieClip {
 							
 							objectsAdded = true;
 							
-							__objects.set (frameObject.id, {object:displayObject, depth:frameObject.depth});
+							__objects.set (frameObject.id, {object:displayObject, depth:frameObject.depth, onStage:true});
 							
 						}
 						
 					} else {
-						
-						displayObject = __objects.get (frameObject.id).object;
+
+						var tuple = __objects.get (frameObject.id);
+
+						if (!tuple.onStage) {
+
+							objectsAdded = true;
+							tuple.onStage = true;
+
+						}
+
+						displayObject = tuple.object;
 						
 					}
 					
@@ -770,7 +780,8 @@ class MovieClip extends flash.display.MovieClip {
 					
 					if (__objects.exists (frameObject.id)) {
 						
-						displayObject = __objects.get (frameObject.id).object;
+						var tuple = __objects.get (frameObject.id);
+						displayObject = tuple.object;
 						
 						if (displayObject != null && displayObject.parent == this) {
 							
@@ -778,7 +789,7 @@ class MovieClip extends flash.display.MovieClip {
 							
 						}
 						
-						__objects.remove (frameObject.id);
+						tuple.onStage = false;
 						
 					}
 					
@@ -790,7 +801,7 @@ class MovieClip extends flash.display.MovieClip {
 
 		if (objectsAdded) {
 			var layers : Array<{object : DisplayObject, depth : Int}> = [];
-			for (layer in __objects) {
+			for (layer in __objects) if (layer.onStage) {
 				layers.push(layer);
 			}
 			layers.sort(function(left, right){ return left.depth - right.depth; });
