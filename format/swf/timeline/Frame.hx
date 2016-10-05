@@ -25,8 +25,8 @@ class Frame
 	}
 	
 	public function getObjectsSortedByDepth():Array<FrameObject> {
-		var depths:Array<Int> = [];
 		if(_objectsSortedByDepth == null) {
+			var depths:Array<Int> = [];
 			for(depth in objects.keys()) {
 				depths.push(depth);
 			}
