@@ -103,7 +103,7 @@ class DynamicTextField extends TextField {
 			format.indent = Std.int (symbol.indent / 20);
 			format.leading = Std.int (symbol.leading / 20);
 			
-			if (embedFonts) format.leading += 4; // TODO: Why is this necessary?
+			//if (embedFonts) format.leading += 4; // TODO: Why is this necessary?
 			
 		}
 		
